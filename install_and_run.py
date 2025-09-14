@@ -42,8 +42,8 @@ def main():
     print("\n🤖 Запускаю бота...")
     try:
         # Импортируем и запускаем main
-        from main import main
-        main()
+        from src.main import run_bot
+        run_bot()
     except KeyboardInterrupt:
         print("\n👋 Бот остановлен пользователем")
     except Exception as e:

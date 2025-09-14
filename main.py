@@ -1,7 +1,7 @@
 """Основной файл запуска бота (совместимость)"""
-from src.main import main
+from src.main import run_bot
 
 if __name__ == '__main__':
-    main()
+    run_bot()
 
 

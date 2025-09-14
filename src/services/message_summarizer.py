@@ -20,9 +20,11 @@ class MessageSummarizer:
                 return "Нет сообщений для суммаризации"
             
             # Объединяем все сообщения
-            combined_text = "\n".join(messages)
+            formated_messages = ''
+            for i, message in enumerate(messages):
+                formated_messages += f'Сообщение №{i}: {message}'
             
-            prompt = SUMMARIZATION_PROMPT.format(combined_text=combined_text)
+            prompt = SUMMARIZATION_PROMPT.format(combined_text=formated_messages)
 
             # Заголовки для запроса
             headers = {

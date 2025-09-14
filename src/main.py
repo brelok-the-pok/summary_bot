@@ -6,6 +6,7 @@ from .config.settings import TELEGRAM_TOKEN
 from .handlers.command_handlers import start_command, transcribe_command, summary_command, messages_command
 from .handlers.message_handlers import handle_voice_message, handle_text_message
 from .handlers.callback_handlers import button_callback
+from .services.database import db_service
 
 # Настройка логирования
 logging.basicConfig(
@@ -15,8 +16,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def main():
+async def main():
     """Основная функция запуска бота"""
+    # Инициализируем базу данных
+    await db_service.initialize()
+    
     # Создаем приложение
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     
@@ -36,8 +40,20 @@ def main():
     
     # Запускаем бота
     logger.info("Запуск бота...")
-    application.run_polling()
+    await application.run_polling()
+
+
+def run_bot():
+    """Запуск бота в синхронном режиме"""
+    import asyncio
+    import nest_asyncio
+    
+    # Разрешаем вложенные event loops
+    nest_asyncio.apply()
+    
+    # Запускаем бота
+    asyncio.run(main())
 
 
 if __name__ == '__main__':
-    main()
+    run_bot()

@@ -38,11 +38,11 @@ async def transcribe_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     user_id = str(update.effective_user.id)
     today = date.today().strftime('%Y-%m-%d')
     
-    if not has_user_messages(user_id, today):
+    if not await has_user_messages(user_id, today):
         await update.message.reply_text(NO_MESSAGES_TODAY)
         return
     
-    messages = get_user_messages(user_id, today)
+    messages = await get_user_messages(user_id, today)
     
     # Получаем транскрипции
     transcriptions = []
@@ -62,11 +62,11 @@ async def summary_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     today = date.today().strftime('%Y-%m-%d')
     
-    if not has_user_messages(user_id, today):
+    if not await has_user_messages(user_id, today):
         await update.message.reply_text(NO_MESSAGES_FOR_SUMMARY)
         return
     
-    transcriptions = get_user_transcriptions(user_id, today)
+    transcriptions = await get_user_transcriptions(user_id, today)
     
     if not transcriptions:
         await update.message.reply_text(NO_TRANSCRIPTIONS_FOR_SUMMARY)
@@ -89,11 +89,11 @@ async def messages_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     today = date.today().strftime('%Y-%m-%d')
     
-    if not has_user_messages(user_id, today):
+    if not await has_user_messages(user_id, today):
         await update.message.reply_text(NO_MESSAGES_FOR_DISPLAY)
         return
     
-    messages = get_user_messages(user_id, today)
+    messages = await get_user_messages(user_id, today)
     messages_text = MESSAGES_HEADER.format(date=today)
     
     for i, msg in enumerate(messages, 1):

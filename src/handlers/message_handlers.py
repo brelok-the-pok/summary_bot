@@ -38,14 +38,14 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         # Транскрибируем
         transcription = await VoiceProcessor.transcribe_voice(audio_data)
         
-        # Сохраняем в памяти
+        # Сохраняем в базе данных
         message_data = {
             'message_id': message_id,
             'timestamp': datetime.now().isoformat(),
             's3_key': s3_key,
             'transcription': transcription
         }
-        add_user_message(user_id, message_data)
+        await add_user_message(user_id, message_data)
         
         # Удаляем индикатор загрузки
         await processing_msg.delete()

@@ -76,7 +76,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
         
-        transcriptions = get_user_transcriptions(user_id, today)
+        transcriptions = await get_user_transcriptions(user_id, today)
         
         if not transcriptions:
             await query.edit_message_text(
