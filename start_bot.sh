@@ -88,7 +88,8 @@ After=network.target
 Type=simple
 User=$BOT_USER
 WorkingDirectory=$BOT_DIR
-Environment=PATH=$BOT_DIR/venv/bin
+Environment=PATH=$BOT_DIR/venv/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONPATH=$BOT_DIR
 ExecStart=$BOT_DIR/venv/bin/python main.py
 Restart=always
 RestartSec=10
@@ -111,6 +112,7 @@ create_screen_script() {
 #!/bin/bash
 cd /opt/summary_bot
 source venv/bin/activate
+export PYTHONPATH=/opt/summary_bot
 python main.py
 EOF
 
@@ -214,10 +216,21 @@ install_bot() {
     log "Для запуска используйте: sudo ./start_bot.sh start"
 }
 
+# Обновление systemd service
+update_service() {
+    log "Обновление systemd service..."
+    check_root
+    create_systemd_service
+    log "Systemd service обновлен"
+}
+
 # Основная логика
 case "${1:-}" in
     "install")
         install_bot
+        ;;
+    "update-service")
+        update_service
         ;;
     "start")
         check_root
@@ -248,17 +261,18 @@ case "${1:-}" in
         stop_screen
         ;;
     *)
-        echo "Использование: $0 {install|start|stop|restart|status|logs|screen|stop-screen}"
+        echo "Использование: $0 {install|update-service|start|stop|restart|status|logs|screen|stop-screen}"
         echo ""
         echo "Команды:"
-        echo "  install     - Установка бота на сервер"
-        echo "  start       - Запуск бота через systemd"
-        echo "  stop        - Остановка бота"
-        echo "  restart     - Перезапуск бота"
-        echo "  status      - Показать статус бота"
-        echo "  logs        - Показать логи бота в реальном времени"
-        echo "  screen      - Запуск бота через screen (альтернативный способ)"
-        echo "  stop-screen - Остановка screen сессии"
+        echo "  install         - Установка бота на сервер"
+        echo "  update-service  - Обновление systemd service файла"
+        echo "  start           - Запуск бота через systemd"
+        echo "  stop            - Остановка бота"
+        echo "  restart         - Перезапуск бота"
+        echo "  status          - Показать статус бота"
+        echo "  logs            - Показать логи бота в реальном времени"
+        echo "  screen          - Запуск бота через screen (альтернативный способ)"
+        echo "  stop-screen     - Остановка screen сессии"
         echo ""
         echo "Примеры использования:"
         echo "  sudo ./start_bot.sh install    # Первоначальная установка"
