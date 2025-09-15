@@ -7,11 +7,14 @@ def get_main_menu_keyboard():
     keyboard = [
         [
             InlineKeyboardButton("🎵 Отправить голосовое", callback_data="voice_info"),
-            InlineKeyboardButton("📝 Транскрипции", callback_data="transcribe")
+            InlineKeyboardButton("📝 Транскрибации", callback_data="transcribe"),
         ],
         [
-            InlineKeyboardButton("📊 Суммаризация", callback_data="summary"),
-            InlineKeyboardButton("📋 Мои сообщения", callback_data="messages")
+            InlineKeyboardButton("📊 Личная суммаризация", callback_data="personal_summary"),
+            InlineKeyboardButton("📋 Все сообщения", callback_data="messages")
+        ],
+        [
+            InlineKeyboardButton("📊 Рабочая суммаризация", callback_data="work_summary")
         ],
         [
             InlineKeyboardButton("ℹ️ Помощь", callback_data="help")

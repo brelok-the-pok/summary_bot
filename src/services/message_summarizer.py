@@ -4,16 +4,19 @@ import requests
 from typing import List
 
 from ..config.settings import YANDEX_API_KEY, YANDEX_FOLDER_ID, YANDEX_GPT_URL
-from ..config.messages import SUMMARIZATION_PROMPT, GPT_ERROR, SUMMARIZATION_ERROR
+from ..config.messages import SUMMARIZATION_PROMPT, GPT_ERROR, SUMMARIZATION_ERROR, WORK_SUMMARIZATION_PROMPT
 
 logger = logging.getLogger(__name__)
+
+
+
 
 
 class MessageSummarizer:
     """Класс для суммаризации сообщений через Yandex GPT"""
     
     @staticmethod
-    async def summarize_messages(messages: List[str]) -> str:
+    async def summarize_messages(messages: List[str], promt=SUMMARIZATION_PROMPT) -> str:
         """Создает суммаризацию сообщений через Yandex GPT HTTP API"""
         try:
             if not messages:
@@ -24,7 +27,7 @@ class MessageSummarizer:
             for i, message in enumerate(messages):
                 formated_messages += f'Сообщение №{i}: {message}'
             
-            prompt = SUMMARIZATION_PROMPT.format(combined_text=formated_messages)
+            prompt = promt.format(combined_text=formated_messages)
 
             # Заголовки для запроса
             headers = {
@@ -67,3 +70,8 @@ class MessageSummarizer:
         except Exception as e:
             logger.error(f"Ошибка суммаризации: {e}")
             return SUMMARIZATION_ERROR
+    
+    @staticmethod
+    async def summarize_work_messages(messages: List[str]) -> str:
+        """Создает рабочую суммаризацию сообщений через Yandex GPT HTTP API"""
+        return await MessageSummarizer.summarize_messages(messages, WORK_SUMMARIZATION_PROMPT)

@@ -3,7 +3,7 @@ import logging
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters
 
 from .config.settings import TELEGRAM_TOKEN
-from .handlers.command_handlers import start_command, transcribe_command, summary_command, messages_command
+from .handlers.command_handlers import start_command, transcribe_command, summary_command, messages_command, work_summary_command
 from .handlers.message_handlers import handle_voice_message, handle_text_message
 from .handlers.callback_handlers import button_callback
 from .services.database import db_service
@@ -28,7 +28,8 @@ async def main():
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("help", start_command))
     application.add_handler(CommandHandler("transcribe", transcribe_command))
-    application.add_handler(CommandHandler("summary", summary_command))
+    application.add_handler(CommandHandler("personal_summary", summary_command))
+    application.add_handler(CommandHandler("work_summary", work_summary_command))
     application.add_handler(CommandHandler("messages", messages_command))
     
     # Добавляем обработчики callback запросов

@@ -91,43 +91,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 NO_TRANSCRIPTIONS,
                 reply_markup=get_main_menu_keyboard()
             )
-    
-    elif query.data == "summary":
-        if not await has_user_messages(user_id, today):
-            await safe_edit_message(
-                query,
-                NO_MESSAGES_FOR_SUMMARY,
-                reply_markup=get_main_menu_keyboard()
-            )
-            return
-        
-        transcriptions = await get_user_transcriptions(user_id, today)
-        
-        if not transcriptions:
-            await safe_edit_message(
-                query,
-                NO_TRANSCRIPTIONS_FOR_SUMMARY,
-                reply_markup=get_main_menu_keyboard()
-            )
-            return
-        
-        # Показываем индикатор загрузки
-        await safe_edit_message(
-            query,
-            CREATING_SUMMARY,
-            reply_markup=get_main_menu_keyboard()
-        )
-        
-        # Создаем суммаризацию
-        summary = await MessageSummarizer.summarize_messages(transcriptions)
-        
-        # Отправляем результат
-        await safe_edit_message(
-            query,
-            SUMMARY_HEADER.format(date=today) + summary,
-            reply_markup=get_main_menu_keyboard()
-        )
-    
+
     elif query.data == "messages":
         if not await has_user_messages(user_id, today):
             await safe_edit_message(
@@ -156,6 +120,80 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await safe_edit_message(
             query,
             messages_text,
+            reply_markup=get_main_menu_keyboard()
+        )
+    
+    elif query.data == "personal_summary":
+        if not await has_user_messages(user_id, today):
+            await safe_edit_message(
+                query,
+                NO_MESSAGES_FOR_SUMMARY,
+                reply_markup=get_main_menu_keyboard()
+            )
+            return
+        
+        transcriptions = await get_user_transcriptions(user_id, today)
+        
+        if not transcriptions:
+            await safe_edit_message(
+                query,
+                NO_TRANSCRIPTIONS_FOR_SUMMARY,
+                reply_markup=get_main_menu_keyboard()
+            )
+            return
+        
+        # Показываем индикатор загрузки
+        processing_msg = await query.message.reply_text(
+            CREATING_SUMMARY,
+            reply_markup=get_main_menu_keyboard()
+        )
+        
+        # Создаем личную суммаризацию
+        summary = await MessageSummarizer.summarize_messages(transcriptions)
+        
+        # Удаляем индикатор загрузки
+        await processing_msg.delete()
+        
+        # Отправляем результат как новое сообщение
+        await query.message.reply_text(
+            SUMMARY_HEADER.format(date=today) + summary,
+            reply_markup=get_main_menu_keyboard()
+        )
+    
+    elif query.data == "work_summary":
+        if not await has_user_messages(user_id, today):
+            await safe_edit_message(
+                query,
+                NO_MESSAGES_FOR_SUMMARY,
+                reply_markup=get_main_menu_keyboard()
+            )
+            return
+        
+        transcriptions = await get_user_transcriptions(user_id, today)
+        
+        if not transcriptions:
+            await safe_edit_message(
+                query,
+                NO_TRANSCRIPTIONS_FOR_SUMMARY,
+                reply_markup=get_main_menu_keyboard()
+            )
+            return
+        
+        # Показываем индикатор загрузки
+        processing_msg = await query.message.reply_text(
+            "🤔 Создаю рабочую суммаризацию...",
+            reply_markup=get_main_menu_keyboard()
+        )
+        
+        # Создаем рабочую суммаризацию
+        work_summary = await MessageSummarizer.summarize_work_messages(transcriptions)
+        
+        # Удаляем индикатор загрузки
+        await processing_msg.delete()
+        
+        # Отправляем результат как новое сообщение
+        await query.message.reply_text(
+            f"📊 Рабочая суммаризация за {today}:\n\n{work_summary}",
             reply_markup=get_main_menu_keyboard()
         )
     

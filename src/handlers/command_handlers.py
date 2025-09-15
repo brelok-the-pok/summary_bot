@@ -18,6 +18,7 @@ from ..config.messages import (
     MESSAGES_HEADER,
     MESSAGE_ITEM
 )
+from ..config.messages import WORK_SUMMARIZATION_PROMPT
 from ..utils.keyboards import get_main_menu_keyboard
 from ..utils.storage import get_user_messages, get_user_transcriptions, has_user_messages
 from ..services.message_summarizer import MessageSummarizer
@@ -78,6 +79,32 @@ async def summary_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     processing_msg = await update.message.reply_text(CREATING_SUMMARY)
     
     summary = await MessageSummarizer.summarize_messages(transcriptions)
+    
+    # Удаляем индикатор загрузки
+    await processing_msg.delete()
+    
+    # Отправляем результат
+    await update.message.reply_text(SUMMARY_HEADER.format(date=today) + summary)
+
+async def work_summary_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик команды /summary"""
+    user_id = str(update.effective_user.id)
+    today = date.today().strftime('%Y-%m-%d')
+    
+    if not await has_user_messages(user_id, today):
+        await update.message.reply_text(NO_MESSAGES_FOR_SUMMARY)
+        return
+    
+    transcriptions = await get_user_transcriptions(user_id, today)
+    
+    if not transcriptions:
+        await update.message.reply_text(NO_TRANSCRIPTIONS_FOR_SUMMARY)
+        return
+    
+    # Показываем индикатор загрузки
+    processing_msg = await update.message.reply_text(CREATING_SUMMARY)
+    
+    summary = await MessageSummarizer.summarize_messages(transcriptions, WORK_SUMMARIZATION_PROMPT)
     
     # Удаляем индикатор загрузки
     await processing_msg.delete()
