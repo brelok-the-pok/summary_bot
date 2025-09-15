@@ -21,7 +21,9 @@ async def get_user_messages(user_id: str, target_date: str = None) -> List[Dict[
             'message_id': msg.message_id,
             'timestamp': msg.timestamp,
             's3_key': msg.s3_key,
-            'transcription': msg.transcription
+            'transcription': msg.transcription,
+            'text_content': msg.text_content,
+            'message_type': msg.message_type
         })
     
     return result
@@ -39,7 +41,9 @@ async def add_user_message(user_id: str, message_data: Dict[str, Any], target_da
         date=target_date,
         timestamp=message_data.get('timestamp', datetime.now().isoformat()),
         s3_key=message_data.get('s3_key'),
-        transcription=message_data.get('transcription')
+        transcription=message_data.get('transcription'),
+        text_content=message_data.get('text_content'),
+        message_type=message_data.get('message_type', 'voice')
     )
     
     # Сохраняем в базе данных

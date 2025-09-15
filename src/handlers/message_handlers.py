@@ -43,7 +43,8 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             'message_id': message_id,
             'timestamp': datetime.now().isoformat(),
             's3_key': s3_key,
-            'transcription': transcription
+            'transcription': transcription,
+            'message_type': 'voice'
         }
         await add_user_message(user_id, message_data)
         
@@ -63,7 +64,29 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик текстовых сообщений"""
-    await update.message.reply_text(
-        TEXT_MESSAGE_RESPONSE,
-        reply_markup=get_main_menu_keyboard()
-    )
+    user_id = str(update.effective_user.id)
+    message_id = update.message.message_id
+    text_content = update.message.text
+    
+    try:
+        # Сохраняем текстовое сообщение в базе данных
+        message_data = {
+            'message_id': message_id,
+            'timestamp': datetime.now().isoformat(),
+            'text_content': text_content,
+            'message_type': 'text'
+        }
+        await add_user_message(user_id, message_data)
+        
+        # Отправляем подтверждение
+        await update.message.reply_text(
+            f"✅ Текстовое сообщение сохранено!\n\nВаше сообщение: {text_content}",
+            reply_markup=get_main_menu_keyboard()
+        )
+        
+    except Exception as e:
+        logger.error(f"Ошибка сохранения текстового сообщения: {e}")
+        await update.message.reply_text(
+            "❌ Произошла ошибка при сохранении сообщения. Попробуйте еще раз.",
+            reply_markup=get_main_menu_keyboard()
+        )

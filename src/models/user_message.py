@@ -14,6 +14,8 @@ class UserMessage:
     timestamp: str = ""
     s3_key: Optional[str] = None
     transcription: Optional[str] = None
+    text_content: Optional[str] = None  # Текстовое содержимое сообщения
+    message_type: str = "voice"  # Тип сообщения: "voice" или "text"
     created_at: Optional[datetime] = None
     
     def __post_init__(self):

@@ -33,6 +33,8 @@ class DatabaseService:
                     timestamp TEXT NOT NULL,
                     s3_key TEXT,
                     transcription TEXT,
+                    text_content TEXT,
+                    message_type TEXT DEFAULT 'voice',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     UNIQUE(user_id, message_id, date)
                 )
@@ -49,6 +51,17 @@ class DatabaseService:
                 ON user_messages(user_id)
             """)
             
+            # Добавляем новые поля, если они не существуют (миграция)
+            try:
+                await db.execute("ALTER TABLE user_messages ADD COLUMN text_content TEXT")
+            except:
+                pass  # Поле уже существует
+            
+            try:
+                await db.execute("ALTER TABLE user_messages ADD COLUMN message_type TEXT DEFAULT 'voice'")
+            except:
+                pass  # Поле уже существует
+            
             await db.commit()
         
         self._initialized = True
@@ -61,8 +74,8 @@ class DatabaseService:
         async with aiosqlite.connect(self.db_path) as db:
             cursor = await db.execute("""
                 INSERT OR REPLACE INTO user_messages 
-                (user_id, message_id, date, timestamp, s3_key, transcription, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (user_id, message_id, date, timestamp, s3_key, transcription, text_content, message_type, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 message.user_id,
                 message.message_id,
@@ -70,6 +83,8 @@ class DatabaseService:
                 message.timestamp,
                 message.s3_key,
                 message.transcription,
+                message.text_content,
+                message.message_type,
                 message.created_at.isoformat() if message.created_at else None
             ))
             await db.commit()
@@ -81,7 +96,7 @@ class DatabaseService:
         
         async with aiosqlite.connect(self.db_path) as db:
             cursor = await db.execute("""
-                SELECT id, user_id, message_id, date, timestamp, s3_key, transcription, created_at
+                SELECT id, user_id, message_id, date, timestamp, s3_key, transcription, text_content, message_type, created_at
                 FROM user_messages 
                 WHERE user_id = ? AND date = ?
                 ORDER BY created_at ASC
@@ -99,26 +114,37 @@ class DatabaseService:
                     timestamp=row[4],
                     s3_key=row[5],
                     transcription=row[6],
-                    created_at=datetime.fromisoformat(row[7]) if row[7] else None
+                    text_content=row[7],
+                    message_type=row[8] or "voice",
+                    created_at=datetime.fromisoformat(row[9]) if row[9] else None
                 )
                 messages.append(message)
             
             return messages
     
     async def get_user_transcriptions(self, user_id: str, date: str) -> List[str]:
-        """Получает транскрипции пользователя за определенную дату"""
+        """Получает транскрипции и текстовые сообщения пользователя за определенную дату"""
         await self.initialize()
         
         async with aiosqlite.connect(self.db_path) as db:
             cursor = await db.execute("""
-                SELECT transcription
+                SELECT 
+                    CASE 
+                        WHEN message_type = 'text' AND text_content IS NOT NULL THEN text_content
+                        WHEN message_type = 'voice' AND transcription IS NOT NULL THEN transcription
+                        ELSE NULL
+                    END as content
                 FROM user_messages 
-                WHERE user_id = ? AND date = ? AND transcription IS NOT NULL
+                WHERE user_id = ? AND date = ? 
+                AND (
+                    (message_type = 'text' AND text_content IS NOT NULL) OR 
+                    (message_type = 'voice' AND transcription IS NOT NULL)
+                )
                 ORDER BY created_at ASC
             """, (user_id, date))
             
             rows = await cursor.fetchall()
-            return [row[0] for row in rows]
+            return [row[0] for row in rows if row[0]]
     
     async def has_user_messages(self, user_id: str, date: str) -> bool:
         """Проверяет, есть ли у пользователя сообщения за определенную дату"""
@@ -140,7 +166,7 @@ class DatabaseService:
         
         async with aiosqlite.connect(self.db_path) as db:
             cursor = await db.execute("""
-                SELECT id, user_id, message_id, date, timestamp, s3_key, transcription, created_at
+                SELECT id, user_id, message_id, date, timestamp, s3_key, transcription, text_content, message_type, created_at
                 FROM user_messages 
                 WHERE user_id = ? AND date BETWEEN ? AND ?
                 ORDER BY created_at ASC
@@ -158,7 +184,9 @@ class DatabaseService:
                     timestamp=row[4],
                     s3_key=row[5],
                     transcription=row[6],
-                    created_at=datetime.fromisoformat(row[7]) if row[7] else None
+                    text_content=row[7],
+                    message_type=row[8] or "voice",
+                    created_at=datetime.fromisoformat(row[9]) if row[9] else None
                 )
                 messages.append(message)
             

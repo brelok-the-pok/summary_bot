@@ -44,11 +44,13 @@ async def transcribe_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     
     messages = await get_user_messages(user_id, today)
     
-    # Получаем транскрипции
+    # Получаем транскрипции и текстовые сообщения
     transcriptions = []
     for msg in messages:
-        if 'transcription' in msg:
+        if msg.get('message_type') == 'voice' and msg.get('transcription'):
             transcriptions.append(TRANSCRIPTION_ITEM.format(transcription=msg['transcription']))
+        elif msg.get('message_type') == 'text' and msg.get('text_content'):
+            transcriptions.append(TRANSCRIPTION_ITEM.format(transcription=msg['text_content']))
     
     if transcriptions:
         result = TRANSCRIPTIONS_HEADER + "\n\n".join(transcriptions)
@@ -98,11 +100,15 @@ async def messages_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     for i, msg in enumerate(messages, 1):
         timestamp = msg.get('timestamp', 'Неизвестно')
-        transcription = msg.get('transcription', 'Не распознано')
-        messages_text += MESSAGE_ITEM.format(
-            index=i, 
-            timestamp=timestamp, 
-            transcription=transcription
-        )
+        message_type = msg.get('message_type', 'voice')
+        
+        if message_type == 'voice':
+            content = msg.get('transcription', 'Не распознано')
+            prefix = "🎵"
+        else:
+            content = msg.get('text_content', 'Пустое сообщение')
+            prefix = "📝"
+        
+        messages_text += f"{i}. {timestamp}\n{prefix} {content}\n\n"
     
     await update.message.reply_text(messages_text)
